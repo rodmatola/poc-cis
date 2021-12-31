@@ -1,0 +1,28 @@
+image: cypress/base:14.16.0
+# image: ubuntu:latest
+
+before_script:
+  - npm install
+  - apt-get update && apt-get --assume-yes install netcat
+
+# This folder is cached between builds
+# https://docs.gitlab.com/ee/ci/yaml/index.html#cache
+cache:
+  paths:
+    - node_modules/
+
+dev:
+  stage: test
+  script:
+    - npm run test:contract
+    - npm run cleanstart &
+    - while ! nc -w 20 -z localhost 8080; do sleep 0.1; done
+    - npx cypress verify
+    - npm run test:functional
+
+stages:
+  - test
+# sast:
+#   stage: test
+# include:
+#   - template: Security/SAST.gitlab-ci.yml
